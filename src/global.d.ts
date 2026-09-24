@@ -15,6 +15,16 @@ interface Fic {
   correct?: boolean;
 }
 
+interface FicMetadata {
+  title: string;
+  rating: string;
+  category: string;
+  relationshipList: string[];
+  wordcount: number;
+  chapterCount: number;
+  chaptered: boolean;
+}
+
 interface Author {
   name: string;
   link?: string;

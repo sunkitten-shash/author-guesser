@@ -1,16 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import FicAdd from './FicAdd';
+import { getParsed } from '../utils';
 
 interface GuessingBoardProps {
   eventName: string;
 }
 
 // do we need tanstack table for all the columns......
-
-const getParsed = (key: string, fallback?: unknown) => {
-  return JSON.parse(
-    window?.localStorage?.getItem(key) ?? JSON.stringify(fallback),
-  );
-};
 
 export default function GuessingBoard({ eventName }: GuessingBoardProps) {
   const LOCAL_STORAGE_PREFIX = useMemo(
@@ -21,6 +17,7 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
   const [eventRecord, setEventRecord] = useState<EventRecord>(
     getParsed(`${LOCAL_STORAGE_PREFIX}_eventRecord`, {}),
   );
+  const { fics, authors, matches } = eventRecord;
   const [tags, setTags] = useState<Tag[]>(getParsed('author-guesser_tags', []));
 
   const [ficsVisible, setFicsVisible] = useState(true);
@@ -85,6 +82,17 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
         {ficsVisible && (
           <div>
             <h3>Fics</h3>
+            {fics?.map((fic) => (
+              <p>{fic.title}</p>
+            ))}
+            <FicAdd
+              addFicCallback={(fic) =>
+                setEventRecord((prev) => ({
+                  ...prev,
+                  fics: [...(fics ?? []), fic],
+                }))
+              }
+            />
           </div>
         )}
         {authorsVisible && (
