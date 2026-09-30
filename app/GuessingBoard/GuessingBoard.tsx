@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import FicAdd from './FicAdd';
 import { getParsed } from '../_lib/utils';
+import FicDescription from './FicDescription';
+import AuthorAdd from './AuthorAdd';
 
 interface GuessingBoardProps {
   eventName: string;
@@ -24,6 +26,11 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
 
   const [ficsVisible, setFicsVisible] = useState(true);
   const [authorsVisible, setAuthorsVisible] = useState(true);
+  const [dayVisible, setDayVisible] = useState(true);
+  const [wordcountVisible, setWordcountVisible] = useState(true);
+
+  const [selectedFic, setSelectedFic] = useState<Fic | null>(null);
+  const [selectedAuthor, setSelectedAuthor] = useState<Author | null>(null);
 
   const updateLocalStorageEventRecord = useCallback(() => {
     window?.localStorage?.setItem(
@@ -31,6 +38,10 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
       JSON.stringify(eventRecord),
     );
   }, [LOCAL_STORAGE_PREFIX, eventRecord]);
+
+  const fetchAuthorMetadata = useCallback(async () => {
+    console.log('fetch');
+  }, []);
 
   // TODO: hopefully this won't loop?
   useEffect(
@@ -41,6 +52,21 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
       ),
     [LOCAL_STORAGE_PREFIX, tags],
   );
+
+  useEffect(
+    () => console.log({ fics, authors, matches }),
+    [fics, authors, matches],
+  );
+
+  useEffect(() => {
+    if (!!selectedFic && !!selectedAuthor) {
+      console.log('match found!');
+      console.log(selectedFic, selectedAuthor);
+      setSelectedFic(null);
+      setSelectedAuthor(null);
+    }
+    // otherwise do nothing
+  }, [selectedFic, selectedAuthor]);
 
   // separate components for author & fic boards
   // probably do like { authors, fics, ... } instead of just eventRecord
@@ -63,8 +89,8 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
           onChange={(e) => setFicsVisible(e.target.checked)}
         />
         <label htmlFor='fics-visible'>Show fics</label>
-
         <br />
+
         <input
           type='checkbox'
           name='authors-visible'
@@ -72,6 +98,22 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
           onChange={(e) => setAuthorsVisible(e.target.checked)}
         />
         <label htmlFor='authors-visible'>Show authors</label>
+        <br />
+
+        <input
+          type='checkbox'
+          name='day-visible'
+          checked={dayVisible}
+          onChange={(e) => setDayVisible(e.target.checked)}
+        />
+        <label htmlFor='day-visible'>Show fic day</label>
+        <input
+          type='checkbox'
+          name='wordcount-visible'
+          checked={wordcountVisible}
+          onChange={(e) => setWordcountVisible(e.target.checked)}
+        />
+        <label htmlFor='wordcount-visible'>Show wordcount</label>
       </div>
 
       <div
@@ -82,10 +124,24 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
         }}
       >
         {ficsVisible && (
-          <div>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '5px',
+            }}
+          >
             <h3>Fics</h3>
             {fics?.map((fic) => (
-              <p key={fic.title}>{fic.title}</p>
+              <FicDescription
+                key={fic.title}
+                fic={fic}
+                dayVisible={dayVisible}
+                wordcountVisible={wordcountVisible}
+                setFicSelected={(selected) =>
+                  selected ? setSelectedFic(fic) : setSelectedFic(null)
+                }
+              />
             ))}
             <FicAdd
               addFicCallback={(fic) =>
@@ -100,6 +156,17 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
         {authorsVisible && (
           <div>
             <h3>Authors</h3>
+            {/* <button onClick={fetchAuthorMetadata}>
+              Get all author metadata
+            </button> */}
+            <AuthorAdd
+              addAuthorCallback={(author) =>
+                setEventRecord((prev) => ({
+                  ...prev,
+                  authors: [...(authors ?? []), author],
+                }))
+              }
+            />
           </div>
         )}
       </div>

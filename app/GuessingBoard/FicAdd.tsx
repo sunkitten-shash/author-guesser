@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { fetchWorkMetadata } from '../_lib/ao3Utils';
-import { getParsed } from '../_lib/utils';
+import { addTag, getParsed, getTagString } from '../_lib/utils';
 
 interface FicAddProps {
   addFicCallback: (fic: Fic) => void;
@@ -8,10 +8,9 @@ interface FicAddProps {
 
 export default function FicAdd({ addFicCallback }: FicAddProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [fic, setFic] = useState<Fic | null>(null);
-  const [link, setLink] = useState('');
+  const [fic, setFic] = useState<Fic>({ title: '', link: '' });
 
-  const [tagMappings, setTagMappings] = useState<Record<string, string>>(
+  const [tagMappings] = useState<Record<string, string>>(
     getParsed(`author-guesser_tagMappings`, {}),
   );
   const [mappedRelationships, setMappedRelationships] = useState<
@@ -19,9 +18,25 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
   >({});
   const [relationshipList, setRelationshipList] = useState<string[]>([]);
 
+  const [tags, setTags] = useState<Tag[]>(getParsed('author-guesser_tags', []));
+
+  const saveMappedRelationships = useCallback(() => {
+    const newTagMappings = { ...tagMappings, mappedRelationships };
+    window?.localStorage?.setItem(
+      `author-guesser_tagMappings`,
+      JSON.stringify(newTagMappings),
+    );
+  }, [mappedRelationships, tagMappings]);
+
   const addTagToFic = useCallback(
-    (tag: Tag) => {
-      if (!fic) return;
+    (tag: Tag | string) => {
+      if (typeof tag === 'string') {
+        const tagSplit = tag.split(':');
+        tag = {
+          name: tagSplit[tagSplit.length - 1],
+          ...(tagSplit.length === 2 && { category: tagSplit[0] }),
+        };
+      }
 
       const hasTag = fic.tags?.find(
         (t) => t.name === tag.name && t.category === tag.category,
@@ -30,10 +45,9 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
 
       setFic((prev) => ({
         ...prev,
-        title: prev!.title ?? '',
-        notes: prev!.notes ?? '',
         tags: [...(prev!.tags ?? []), tag],
       }));
+      addTag(tag, setTags);
     },
     [fic],
   );
@@ -49,8 +63,6 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
 
       setFic((prev) => ({
         ...prev,
-        title: prev!.title ?? '',
-        notes: prev!.notes ?? '',
         tags: prev!.tags!.filter(
           (t) => t.name === tag.name && t.category === tag.category,
         ),
@@ -60,13 +72,14 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
   );
 
   const fetchAO3Data = useCallback(async () => {
-    if (!link) return;
+    if (!fic.link) return;
 
-    const metadata = await fetchWorkMetadata(link, true);
+    const metadata = await fetchWorkMetadata(fic.link, true);
 
     // TODO: need to be able to create tags?
     console.log({ metadata });
-    const { title, relationshipList, chaptered, wordcount } = metadata;
+    const { title, relationshipList, chaptered, wordcount, rating, category } =
+      metadata;
 
     // setMappedRelationships(relationshipList.map((relationship) => tagMappings[relationship] ))
     setMappedRelationships(
@@ -91,15 +104,17 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
     if (wordcount < 10000) tags.push({ name: 'short', category: 'wc' });
     else if (wordcount < 50000) tags.push({ name: 'medium', category: 'wc' });
     else tags.push({ name: 'long', category: 'wc' });
+    if (rating) tags.push({ name: rating, category: 'rating' });
+    if (category === 'F/F') tags.push({ name: category, category: 'category' });
 
-    setFic({
-      title: title,
-      notes: '',
-      link,
+    setFic((prev) => ({
+      ...prev,
+      title,
       wordcount,
-      tags,
-    });
-  }, [link, tagMappings]);
+      chaptered,
+      tags: [...(prev.tags ?? []), ...tags],
+    }));
+  }, [fic.link, tagMappings]);
 
   return (
     <div>
@@ -124,12 +139,54 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
                 <input
                   id='fic-link'
                   type='text'
-                  value={link}
-                  onChange={(e) => setLink(e.target.value)}
+                  value={fic.link}
+                  onChange={(e) =>
+                    setFic((prev) => ({ ...prev, link: e.target.value }))
+                  }
                 />
                 <button onClick={fetchAO3Data}>Fetch data from AO3</button>
               </div>
+              <label htmlFor='fic-day'>Day</label>
+              <input
+                type='text'
+                id='fic-day'
+                value={fic.day ?? ''}
+                onChange={(e) =>
+                  setFic((prev) => ({
+                    ...prev,
+                    day:
+                      !!e.target.value && !isNaN(parseInt(e.target.value))
+                        ? parseInt(e.target.value)
+                        : undefined,
+                  }))
+                }
+              />
+              <label htmlFor='fic-wc'>Wordcount</label>
+              <input
+                type='text'
+                id='fic-wc'
+                value={fic.wordcount ?? ''}
+                onChange={(e) =>
+                  setFic((prev) => ({
+                    ...prev,
+                    wordcount:
+                      !!e.target.value && !isNaN(parseInt(e.target.value))
+                        ? parseInt(e.target.value)
+                        : undefined,
+                  }))
+                }
+              />
+              <label htmlFor='fic-title'>Title</label>
+              <input
+                type='text'
+                id='fic-title'
+                value={fic.title}
+                onChange={(e) =>
+                  setFic((prev) => ({ ...prev, title: e.target.value }))
+                }
+              />
               {/* TODO: ability to put things in manually as well, plus mapping, etc. */}
+
               <h4>Relationship(s)</h4>
               {/* hmmmmm this doesnt work right for manual ones. */}
               {relationshipList.map((relationship, i) => (
@@ -177,12 +234,37 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
                   />
                 </div>
               ))}
-              // and a button to add another relationship
               <button
                 onClick={() => setRelationshipList((prev) => [...prev, ''])}
               >
                 Add relationship
               </button>
+
+              <label htmlFor='fic-notes'>Notes</label>
+              <textarea
+                id='fic-notes'
+                value={fic.notes ?? ''}
+                onChange={(e) =>
+                  setFic((prev) => ({ ...prev, notes: e.target.value }))
+                }
+              />
+              <h4>Tags</h4>
+              <p>{fic.tags?.map((tag) => getTagString(tag)).join(', ')}</p>
+              <select
+                name='fic-tag-select'
+                id='fic-tag-select'
+                value=''
+                onChange={(e) => addTagToFic(e.target.value)}
+              >
+                <option value=''>Select tag</option>
+                {tags.map((tag) => (
+                  <option key={tag.name} value={getTagString(tag)}>
+                    {getTagString(tag)}
+                  </option>
+                ))}
+              </select>
+              {/* and a button to add new tags */}
+
               <div
                 style={{
                   display: 'flex',
@@ -190,11 +272,27 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
                   justifyContent: 'flex-end',
                 }}
               >
-                <button onClick={() => setDialogOpen(false)}>Close</button>
                 <button
                   onClick={() => {
-                    if (fic) {
+                    setFic({ title: '', link: '' });
+                    setDialogOpen(false);
+                  }}
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    if (fic && !!fic.link && !!fic.title) {
+                      // TODO: reload tags locally?
+                      console.log({ tags });
+                      window?.localStorage?.setItem(
+                        'author-guesser_tags',
+                        JSON.stringify(tags),
+                      );
+                      saveMappedRelationships();
+                      console.log({ fic });
                       addFicCallback(fic);
+                      setFic({ title: '', link: '' });
                       setDialogOpen(false);
                     } else {
                       alert('Set fic info');

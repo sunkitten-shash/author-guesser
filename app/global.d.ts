@@ -5,14 +5,16 @@ interface Tag {
 
 interface Fic {
   title: string;
-  link?: string;
+  link: string;
   day?: number;
+  week?: number;
   // TODO: make sure newlines get recorded accurately?
-  notes: string;
+  notes?: string;
   wordcount?: number;
   tags?: Tag[];
   realAuthor?: Author;
   correct?: boolean;
+  matches?: FicMatch[];
 }
 
 interface FicMetadata {
@@ -29,8 +31,11 @@ interface Author {
   name: string;
   link?: string;
   hasValidLink?: boolean;
-  notes: string;
+  twitter?: string;
+  notes?: string;
   tags?: Tag[];
+  day?: number;
+  week?: number;
   number?: number;
 }
 
@@ -42,17 +47,19 @@ interface TagMatch {
   notes?: string;
 }
 
+interface FicMatch {
+  // TODO: should these like auto-update? or button to update them.....?
+  matchingTags?: TagMatch[];
+  strength?: string;
+  notes?: string;
+}
+
 interface FicMatchRecord {
-  [ficNameAuthorName: string]: {
-    // TODO: should these like auto-update? or button to update them.....?
-    matchingTags?: TagMatch[];
-    strength?: string;
-    notes?: string;
-  };
+  [ficNameAuthorName: string]: FicMatch[];
 }
 
 interface EventRecord {
   fics?: Fic[];
   authors?: Author[];
-  matches?: Match[];
+  matches?: FicMatchRecord;
 }

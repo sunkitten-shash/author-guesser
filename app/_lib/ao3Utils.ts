@@ -106,6 +106,7 @@ export const fetchWorkMetadata = async (workUrl: string, logging = false) => {
   let rating = ratingList.map((rating) => $(rating).text()).join(', ');
   rating = rating.replace('Teen And Up Audiences', 'Teen');
   rating = rating.replace('General Audiences', 'Gen');
+  rating = rating[0];
 
   // category only needed if it's poly/r63
   const category = meta.find('dd.category.tags').find('a').text();
