@@ -2,27 +2,30 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import FicAdd from './FicAdd';
-import { getParsed } from '../_lib/utils';
 import FicDescription from './FicDescription';
 import AuthorAdd from './AuthorAdd';
+import { useAuthors, useFics, useMatches } from '../_lib/swrLoaders';
+import AuthorDescription from './AuthorDescription';
 
 interface GuessingBoardProps {
-  eventName: string;
+  event: EventRecord;
 }
 
-// do we need tanstack table for all the columns......
+export default function GuessingBoard({ event }: GuessingBoardProps) {
+  const { event_id: eventId = '', name, link } = event;
 
-export default function GuessingBoard({ eventName }: GuessingBoardProps) {
-  const LOCAL_STORAGE_PREFIX = useMemo(
-    () => `author-guesser_${eventName.split(' ').join('_')}`,
-    [eventName],
-  );
-
-  const [eventRecord, setEventRecord] = useState<EventRecord>(
-    getParsed(`${LOCAL_STORAGE_PREFIX}_eventRecord`, {}),
-  );
-  const { fics, authors, matches } = eventRecord;
-  const [tags, setTags] = useState<Tag[]>(getParsed('author-guesser_tags', []));
+  // const { fics, authors, matches } = eventRecord;
+  const { fics, isLoading: ficsLoading, mutate: mutateFics } = useFics(eventId);
+  const {
+    authors,
+    isLoading: authorsLoading,
+    mutate: mutateAuthors,
+  } = useAuthors(eventId);
+  const {
+    matches,
+    isLoading: matchesLoading,
+    mutate: mutateMatches,
+  } = useMatches(eventId);
 
   const [ficsVisible, setFicsVisible] = useState(true);
   const [authorsVisible, setAuthorsVisible] = useState(true);
@@ -31,27 +34,6 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
 
   const [selectedFic, setSelectedFic] = useState<Fic | null>(null);
   const [selectedAuthor, setSelectedAuthor] = useState<Author | null>(null);
-
-  const updateLocalStorageEventRecord = useCallback(() => {
-    window?.localStorage?.setItem(
-      `${LOCAL_STORAGE_PREFIX}_eventRecord`,
-      JSON.stringify(eventRecord),
-    );
-  }, [LOCAL_STORAGE_PREFIX, eventRecord]);
-
-  const fetchAuthorMetadata = useCallback(async () => {
-    console.log('fetch');
-  }, []);
-
-  // TODO: hopefully this won't loop?
-  useEffect(
-    () =>
-      window?.localStorage?.setItem(
-        `${LOCAL_STORAGE_PREFIX}_tags`,
-        JSON.stringify(tags),
-      ),
-    [LOCAL_STORAGE_PREFIX, tags],
-  );
 
   useEffect(
     () => console.log({ fics, authors, matches }),
@@ -68,6 +50,14 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
     // otherwise do nothing
   }, [selectedFic, selectedAuthor]);
 
+  // const ficMatches = useMemo(() => {
+  //   return matches.reduce((acc: Record<string, FicMatch[]>, match) => {
+  //     if (acc[match.fic_id]) acc[match.fic_id] = [...acc[match.fic_id], match];
+  //     else acc[match.fic_id] = [match];
+  //     return acc;
+  //   }, {});
+  // }, [matches]);
+
   // separate components for author & fic boards
   // probably do like { authors, fics, ... } instead of just eventRecord
   // or separately to make it easier to save it?
@@ -79,7 +69,7 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
   // girl. context would be Too Much tbh
   return (
     <div>
-      {eventName}
+      {name}
       {/* column visibility */}
       <div>
         <input
@@ -144,12 +134,9 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
               />
             ))}
             <FicAdd
-              addFicCallback={(fic) =>
-                setEventRecord((prev) => ({
-                  ...prev,
-                  fics: [...(fics ?? []), fic],
-                }))
-              }
+              addFicCallback={async () => {
+                await mutateFics();
+              }}
             />
           </div>
         )}
@@ -159,21 +146,23 @@ export default function GuessingBoard({ eventName }: GuessingBoardProps) {
             {/* <button onClick={fetchAuthorMetadata}>
               Get all author metadata
             </button> */}
+            {authors.map((author) => (
+              <AuthorDescription
+                key={author.name}
+                author={author}
+                setAuthorSelected={(selected) =>
+                  selected ? setSelectedAuthor(author) : setSelectedAuthor(null)
+                }
+              />
+            ))}
             <AuthorAdd
-              addAuthorCallback={(author) =>
-                setEventRecord((prev) => ({
-                  ...prev,
-                  authors: [...(authors ?? []), author],
-                }))
-              }
+              addAuthorCallback={async () => {
+                await mutateAuthors();
+              }}
             />
           </div>
         )}
       </div>
-
-      <button id='event-record-save' onClick={updateLocalStorageEventRecord}>
-        Save
-      </button>
     </div>
   );
 }

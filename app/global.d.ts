@@ -1,9 +1,11 @@
 interface Tag {
+  tag_id?: number;
   name: string;
   category?: string;
 }
 
 interface Fic {
+  fic_id?: number;
   title: string;
   link: string;
   day?: number;
@@ -40,7 +42,8 @@ interface Author {
 }
 
 interface TagMatch {
-  tagName: string;
+  // tagName: string;
+  tag: Tag;
   // TODO: consider enum
   strength?: string;
   // TODO: do these as a tooltip?
@@ -48,18 +51,28 @@ interface TagMatch {
 }
 
 interface FicMatch {
+  fic_id: number;
+  author_id?: number;
   // TODO: should these like auto-update? or button to update them.....?
   matchingTags?: TagMatch[];
   strength?: string;
   notes?: string;
 }
+// TODO: needs fic, author, AND event id
 
 interface FicMatchRecord {
   [ficNameAuthorName: string]: FicMatch[];
 }
 
+// interface EventRecord {
+//   fics?: Fic[];
+//   authors?: Author[];
+//   matches?: FicMatchRecord;
+// }
+
 interface EventRecord {
-  fics?: Fic[];
-  authors?: Author[];
-  matches?: FicMatchRecord;
+  event_id?: string;
+  name: string;
+  link: string;
+  archived?: boolean;
 }

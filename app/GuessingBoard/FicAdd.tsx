@@ -1,35 +1,33 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { fetchWorkMetadata } from '../_lib/ao3Utils';
-import { addTag, getParsed, getTagString } from '../_lib/utils';
+import { getTagString } from '../_lib/utils';
+import { useShipMappings, useTags } from '../_lib/swrLoaders';
+import { addFic, addTag, updateShipMappings } from '../_lib/updaters';
 
 interface FicAddProps {
-  addFicCallback: (fic: Fic) => void;
+  addFicCallback: () => Promise<void>;
 }
 
 export default function FicAdd({ addFicCallback }: FicAddProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [fic, setFic] = useState<Fic>({ title: '', link: '' });
 
-  const [tagMappings] = useState<Record<string, string>>(
-    getParsed(`author-guesser_tagMappings`, {}),
-  );
-  const [mappedRelationships, setMappedRelationships] = useState<
+  const { shipMappings, isLoading: shipMappingsLoading } = useShipMappings();
+  const [localShipMappings, setLocalShipMappings] = useState<
     Record<string, string>
   >({});
   const [relationshipList, setRelationshipList] = useState<string[]>([]);
 
-  const [tags, setTags] = useState<Tag[]>(getParsed('author-guesser_tags', []));
+  const { tags, mutate: mutateTags } = useTags();
 
-  const saveMappedRelationships = useCallback(() => {
-    const newTagMappings = { ...tagMappings, mappedRelationships };
-    window?.localStorage?.setItem(
-      `author-guesser_tagMappings`,
-      JSON.stringify(newTagMappings),
-    );
-  }, [mappedRelationships, tagMappings]);
+  useEffect(() => {
+    if (!shipMappingsLoading) {
+      setLocalShipMappings(shipMappings);
+    }
+  }, [shipMappings, shipMappingsLoading]);
 
   const addTagToFic = useCallback(
-    (tag: Tag | string) => {
+    async (tag: Tag | string) => {
       if (typeof tag === 'string') {
         const tagSplit = tag.split(':');
         tag = {
@@ -43,13 +41,25 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
       );
       if (hasTag) return;
 
+      const existingTag = tags.find(
+        (t) =>
+          (!!tag.tag_id && tag.tag_id === t.tag_id) ||
+          (tag.name === t.name && tag.category === t.category),
+      );
+      if (existingTag) {
+        tag.tag_id = existingTag.tag_id;
+      } else {
+        const tagId = await addTag(tag);
+        tag.tag_id = tagId;
+        mutateTags();
+      }
+
       setFic((prev) => ({
         ...prev,
         tags: [...(prev!.tags ?? []), tag],
       }));
-      addTag(tag, setTags);
     },
-    [fic],
+    [fic.tags, mutateTags, tags],
   );
 
   const removeTagFromFic = useCallback(
@@ -76,15 +86,14 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
 
     const metadata = await fetchWorkMetadata(fic.link, true);
 
-    // TODO: need to be able to create tags?
     console.log({ metadata });
     const { title, relationshipList, chaptered, wordcount, rating, category } =
       metadata;
 
-    // setMappedRelationships(relationshipList.map((relationship) => tagMappings[relationship] ))
-    setMappedRelationships(
+    // TODO: is this circular. I changed the logic and this might not be needed anymore.
+    setLocalShipMappings(
       relationshipList.reduce((acc: Record<string, string>, val) => {
-        acc[val] = tagMappings[val] ?? val;
+        acc[val] = localShipMappings[val] ?? val;
         return acc;
       }, {}),
     );
@@ -114,7 +123,7 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
       chaptered,
       tags: [...(prev.tags ?? []), ...tags],
     }));
-  }, [fic.link, tagMappings]);
+  }, [fic.link, localShipMappings]);
 
   return (
     <div>
@@ -193,10 +202,10 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
                 <div style={{ display: 'flex', flexDirection: 'row' }} key={i}>
                   <input
                     type='text'
-                    value={mappedRelationships[relationship] ?? relationship}
+                    value={localShipMappings[relationship] ?? relationship}
                     onChange={(e) =>
-                      mappedRelationships[relationship]
-                        ? setMappedRelationships((prev) => ({
+                      localShipMappings[relationship]
+                        ? setLocalShipMappings((prev) => ({
                             ...prev,
                             [relationship]: e.target.value,
                           }))
@@ -214,21 +223,21 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
                       !!fic?.tags?.find(
                         (t) =>
                           t.name ===
-                            (mappedRelationships[relationship] ??
-                              relationship) && t.category === 'relationship',
+                            (localShipMappings[relationship] ?? relationship) &&
+                          t.category === 'ship',
                       )
                     }
                     onChange={(e) =>
                       e.target.checked
                         ? addTagToFic({
                             name:
-                              mappedRelationships[relationship] ?? relationship,
-                            category: 'relationship',
+                              localShipMappings[relationship] ?? relationship,
+                            category: 'ship',
                           })
                         : removeTagFromFic({
                             name:
-                              mappedRelationships[relationship] ?? relationship,
-                            category: 'relationship',
+                              localShipMappings[relationship] ?? relationship,
+                            category: 'ship',
                           })
                     }
                   />
@@ -281,17 +290,12 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
                   Close
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     if (fic && !!fic.link && !!fic.title) {
-                      // TODO: reload tags locally?
-                      console.log({ tags });
-                      window?.localStorage?.setItem(
-                        'author-guesser_tags',
-                        JSON.stringify(tags),
-                      );
-                      saveMappedRelationships();
+                      await updateShipMappings(localShipMappings);
                       console.log({ fic });
-                      addFicCallback(fic);
+                      await addFic(fic);
+                      await addFicCallback();
                       setFic({ title: '', link: '' });
                       setDialogOpen(false);
                     } else {

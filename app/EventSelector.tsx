@@ -2,72 +2,78 @@
 
 import {
   useCallback,
-  useEffect,
   useState,
   type Dispatch,
   type SetStateAction,
 } from 'react';
+import { useEvents } from './_lib/swrLoaders';
+import { addEvent } from './_lib/updaters';
 
 interface EventSelectorProps {
-  event: string;
-  setEvent: Dispatch<SetStateAction<string>>;
+  event: EventRecord | null;
+  setEvent: Dispatch<SetStateAction<EventRecord | null>>;
 }
 
-const EVENT_OPTIONS_KEY = 'author-guesser_eventOptions';
-
 export default function EventSelector({ event, setEvent }: EventSelectorProps) {
-  const [eventOptions, setEventOptions] = useState<string[]>([]);
-  const [newEventName, setNewEventName] = useState('');
+  const [newEvent, setNewEvent] = useState<EventRecord>({ name: '', link: '' });
+  const [includeArchived, setIncludeArchived] = useState(false);
 
-  useEffect(() => {
-    const options = window?.localStorage?.getItem(EVENT_OPTIONS_KEY);
-    if (options) {
-      setEventOptions(JSON.parse(options));
-    }
-  }, []);
+  const { events, mutate } = useEvents({ includeArchived });
 
-  // useEffect(() => console.log({ eventOptions }), [eventOptions]);
-
-  const updateLocalStorageEventOptions = useCallback(
-    (newOption: string) => {
-      if (eventOptions.includes(newOption)) return;
-      window?.localStorage?.setItem(
-        EVENT_OPTIONS_KEY,
-        JSON.stringify([...eventOptions, newOption]),
-      );
-    },
-    [eventOptions],
-  );
+  const addNewEvent = useCallback(async () => {
+    await addEvent(newEvent);
+    await mutate();
+    setNewEvent({ name: '', link: '' });
+  }, [mutate, newEvent]);
 
   return (
     <div>
       <label htmlFor='event-select'>Pick event to guess for:</label>
+      <label htmlFor='include-archived'>Include archived events?</label>
+      <input
+        type='checkbox'
+        name='include-archived'
+        checked={includeArchived}
+        onChange={(e) => setIncludeArchived(e.target.checked)}
+      />
       <select
         name='event-select'
         id='event-select'
-        value={event}
-        onChange={(e) => setEvent(e.target.value)}
+        value={event?.name ?? ''}
+        onChange={(e) => {
+          const newEvent = events.find((ev) => ev.name === e.target.value);
+          if (newEvent) setEvent(newEvent);
+        }}
       >
         <option value=''>Select event</option>
-        {eventOptions.map((option) => (
-          <option value={option} key={option}>
-            {option}
+        {events.map((ev) => (
+          <option value={ev.name} key={ev.name}>
+            {ev.name}
           </option>
         ))}
       </select>
       <br />
       <input
         type='text'
-        value={newEventName}
-        onChange={(e) => setNewEventName(e.target.value)}
+        value={newEvent.name}
+        onChange={(e) =>
+          setNewEvent((prev) => ({ ...prev, name: e.target.value }))
+        }
+        placeholder='Name'
+      />
+      <input
+        type='text'
+        value={newEvent.link}
+        onChange={(e) =>
+          setNewEvent((prev) => ({ ...prev, link: e.target.value }))
+        }
+        placeholder='Link'
       />
       <button
         id='event-add'
         onClick={() => {
-          if (!newEventName) return;
-          setEventOptions((prev) => [...prev, newEventName]);
-          updateLocalStorageEventOptions(newEventName);
-          setNewEventName('');
+          if (!newEvent.name) return;
+          addNewEvent();
         }}
       >
         Add event

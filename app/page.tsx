@@ -1,27 +1,13 @@
-'use client';
+// 'use client';
 
-import Image from 'next/image';
-import EventSelector from './EventSelector';
-import GuessingBoard from './GuessingBoard/GuessingBoard';
-import { useState } from 'react';
+import dotenv from 'dotenv';
+import MainPage from './MainPage';
+dotenv.config();
 
 export default function Home() {
-  const [event, setEvent] = useState('');
-
   // TODO: make it actually properly use a server action for the thing - maybe pass it through a route? check what's done on the other side.
   return (
-    <div id='root'>
-      <div>
-        <h1>Author Guessing Game</h1>
-        <EventSelector event={event} setEvent={setEvent} />
-        {!!event && (
-          <div>
-            <h2>Guessing for {event}</h2>
-            <GuessingBoard eventName={event} />
-          </div>
-        )}
-      </div>
-    </div>
+    <MainPage />
     // <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
     //   <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
     //     <Image

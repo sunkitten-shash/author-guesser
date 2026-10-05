@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { addTag, getParsed, getTagString } from '../_lib/utils';
+import { getTagString } from '../_lib/utils';
+import { useTags } from '../_lib/swrLoaders';
+import { addTag } from '../_lib/updaters';
 
 interface AuthorAddProps {
   addAuthorCallback: (author: Author) => void;
@@ -11,16 +13,17 @@ export default function AuthorAdd({ addAuthorCallback }: AuthorAddProps) {
 
   const [newTag, setNewTag] = useState('');
 
-  const [tags, setTags] = useState<Tag[]>(getParsed('author-guesser_tags', []));
-
   const resetAuthor = useCallback(() => {
     setAuthor({ name: '' });
   }, []);
 
+  const { tags, mutate: mutateTags } = useTags();
+
   useEffect(() => console.log({ tags }), [tags]);
 
+  // TODO: there's a lot of repeated logic huh.
   const addTagToAuthor = useCallback(
-    (tag: Tag | string) => {
+    async (tag: Tag | string) => {
       if (!tag) return;
 
       if (typeof tag === 'string') {
@@ -36,13 +39,25 @@ export default function AuthorAdd({ addAuthorCallback }: AuthorAddProps) {
       );
       if (hasTag) return;
 
+      const existingTag = tags.find(
+        (t) =>
+          (!!tag.tag_id && tag.tag_id === t.tag_id) ||
+          (tag.name === t.name && tag.category === t.category),
+      );
+      if (existingTag) {
+        tag.tag_id = existingTag.tag_id;
+      } else {
+        const tagId = await addTag(tag);
+        tag.tag_id = tagId;
+        mutateTags();
+      }
+
       setAuthor((prev) => ({
         ...prev,
         tags: [...(prev.tags ?? []), tag],
       }));
-      addTag(tag, setTags);
     },
-    [author.tags],
+    [author.tags, mutateTags, tags],
   );
 
   return (

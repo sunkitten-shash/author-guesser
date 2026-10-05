@@ -350,7 +350,7 @@ code {
   padding: 5px;
 }
 
-.description:hover {
+.description:hover:not(.childHover) {
   background-color: gray;
   cursor: pointer;
 }

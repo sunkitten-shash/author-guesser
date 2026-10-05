@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { getTagString } from '../_lib/utils';
 import TagBadge from './TagBadge';
+import HoverBlocker from '../_lib/HoverBlocker';
 
 interface FicDescriptionProps {
   fic: Fic;
@@ -16,10 +16,11 @@ export default function FicDescription({
   setFicSelected,
 }: FicDescriptionProps) {
   const [selected, setSelected] = useState(false);
+  const [childHover, setChildHover] = useState(false);
 
   return (
     <div
-      className={`description ${selected ? 'selected' : ''}`}
+      className={`description ${selected ? 'selected' : ''} ${childHover ? 'childHover' : ''}`}
       // TODO: there needs to be some kind of callback to set it as the one being selected for a match
       onClick={() => {
         setFicSelected(!selected);
@@ -49,29 +50,33 @@ export default function FicDescription({
         )}
       </div>
       {/* TODO: tag adding & removal */}
-      <div style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}>
-        {fic.tags?.map((tag, i) => (
-          <TagBadge key={i} tag={tag} />
-        ))}
-      </div>
+      <HoverBlocker setChildHover={setChildHover}>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}>
+          {fic.tags?.map((tag, i) => (
+            <TagBadge key={i} tag={tag} />
+          ))}
+        </div>
+      </HoverBlocker>
       {!!fic.notes && <p>{fic.notes}</p>}
-      <details
-        style={{ width: 'fit-content' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <summary>Matches</summary>
-        {fic.matches?.map((match, i) => (
-          <div key={i}>
-            {/* TODO: some kind of select? */}
-            {/* TODO: tag match badge element? */}
-            <span>{match.strength}</span>
-            <p>{match.notes}</p>
-          </div>
-        ))}
-        <button onClick={() => console.log('matching for', fic.title)}>
-          + Add match
-        </button>
-      </details>
+      <HoverBlocker setChildHover={setChildHover}>
+        <details
+          style={{ width: 'fit-content' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <summary>Matches</summary>
+          {fic.matches?.map((match, i) => (
+            <div key={i}>
+              {/* TODO: some kind of select? */}
+              {/* TODO: tag match badge element? */}
+              <span>{match.strength}</span>
+              <p>{match.notes}</p>
+            </div>
+          ))}
+          <button onClick={() => console.log('matching for', fic.title)}>
+            + Add match
+          </button>
+        </details>
+      </HoverBlocker>
     </div>
   );
 }
