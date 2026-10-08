@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fetchWorkMetadata } from '../_lib/ao3Utils';
-import { getTagString } from '../_lib/utils';
+import { getTagString, setAsNum } from '../_lib/utils';
 import { useShipMappings, useTags } from '../_lib/swrLoaders';
 import { addFic, addTag, updateShipMappings } from '../_lib/updaters';
 
 interface FicAddProps {
+  eventId: string | number;
   addFicCallback: () => Promise<void>;
 }
 
-export default function FicAdd({ addFicCallback }: FicAddProps) {
+export default function FicAdd({ eventId, addFicCallback }: FicAddProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [fic, setFic] = useState<Fic>({ title: '', link: '' });
 
@@ -155,21 +156,36 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
                 />
                 <button onClick={fetchAO3Data}>Fetch data from AO3</button>
               </div>
-              <label htmlFor='fic-day'>Day</label>
-              <input
-                type='text'
-                id='fic-day'
-                value={fic.day ?? ''}
-                onChange={(e) =>
-                  setFic((prev) => ({
-                    ...prev,
-                    day:
-                      !!e.target.value && !isNaN(parseInt(e.target.value))
-                        ? parseInt(e.target.value)
-                        : undefined,
-                  }))
-                }
-              />
+              <div style={{ display: 'flex', flexDirection: 'row' }}>
+                <label htmlFor='fic-week'>Week</label>
+                <input
+                  id='fic-week'
+                  type='text'
+                  value={fic.week ?? ''}
+                  onChange={(e) =>
+                    setFic((prev) => ({
+                      ...prev,
+                      week: setAsNum(e.target.value),
+                    }))
+                  }
+                />
+                <label htmlFor='fic-day'>Day</label>
+                <input
+                  type='text'
+                  id='fic-day'
+                  value={fic.day ?? ''}
+                  onChange={(e) =>
+                    setFic((prev) => ({
+                      ...prev,
+                      day:
+                        !!e.target.value && !isNaN(parseInt(e.target.value))
+                          ? parseInt(e.target.value)
+                          : undefined,
+                    }))
+                  }
+                />
+              </div>
+
               <label htmlFor='fic-wc'>Wordcount</label>
               <input
                 type='text'
@@ -294,7 +310,7 @@ export default function FicAdd({ addFicCallback }: FicAddProps) {
                     if (fic && !!fic.link && !!fic.title) {
                       await updateShipMappings(localShipMappings);
                       console.log({ fic });
-                      await addFic(fic);
+                      await addFic({ ...fic, event_id: eventId });
                       await addFicCallback();
                       setFic({ title: '', link: '' });
                       setDialogOpen(false);

@@ -6,6 +6,7 @@ interface Tag {
 
 interface Fic {
   fic_id?: number;
+  event_id?: number | string;
   title: string;
   link: string;
   day?: number;
@@ -30,6 +31,8 @@ interface FicMetadata {
 }
 
 interface Author {
+  author_id?: number;
+  event_id?: number | string;
   name: string;
   link?: string;
   hasValidLink?: boolean;
@@ -38,6 +41,7 @@ interface Author {
   tags?: Tag[];
   day?: number;
   week?: number;
+  wordcount?: number;
   number?: number;
 }
 
@@ -57,6 +61,7 @@ interface FicMatch {
   matchingTags?: TagMatch[];
   strength?: string;
   notes?: string;
+  archived?: boolean;
 }
 // TODO: needs fic, author, AND event id
 
@@ -75,4 +80,18 @@ interface EventRecord {
   name: string;
   link: string;
   archived?: boolean;
+}
+
+enum Confidence {
+  CERTAIN = 'certain',
+  FAIRLY_SURE = 'fairly sure',
+  GOING_FOR_IT = 'going for it',
+  SOLID_IDEA = 'solid idea',
+  NOT_SURE = 'not sure',
+}
+
+enum Strength {
+  STRONG = 'strong',
+  MEDIUM = 'medium',
+  WEAK = 'weak',
 }

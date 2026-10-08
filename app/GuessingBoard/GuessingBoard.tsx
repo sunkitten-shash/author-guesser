@@ -29,7 +29,12 @@ export default function GuessingBoard({ event }: GuessingBoardProps) {
 
   const [ficsVisible, setFicsVisible] = useState(true);
   const [authorsVisible, setAuthorsVisible] = useState(true);
-  const [dayVisible, setDayVisible] = useState(true);
+  const bothVisible = useMemo(
+    () => ficsVisible && authorsVisible,
+    [authorsVisible, ficsVisible],
+  );
+  const [dayVisible, setDayVisible] = useState(false);
+  const [weekVisible, setWeekVisible] = useState(true);
   const [wordcountVisible, setWordcountVisible] = useState(true);
 
   const [selectedFic, setSelectedFic] = useState<Fic | null>(null);
@@ -96,7 +101,14 @@ export default function GuessingBoard({ event }: GuessingBoardProps) {
           checked={dayVisible}
           onChange={(e) => setDayVisible(e.target.checked)}
         />
-        <label htmlFor='day-visible'>Show fic day</label>
+        <label htmlFor='day-visible'>Show day</label>
+        <input
+          type='checkbox'
+          name='week-visible'
+          checked={weekVisible}
+          onChange={(e) => setWeekVisible(e.target.checked)}
+        />
+        <label htmlFor='week-visible'>Show week</label>
         <input
           type='checkbox'
           name='wordcount-visible'
@@ -119,6 +131,7 @@ export default function GuessingBoard({ event }: GuessingBoardProps) {
               display: 'flex',
               flexDirection: 'column',
               gap: '5px',
+              ...(bothVisible ? { width: '45%' } : {}),
             }}
           >
             <h3>Fics</h3>
@@ -127,13 +140,18 @@ export default function GuessingBoard({ event }: GuessingBoardProps) {
                 key={fic.title}
                 fic={fic}
                 dayVisible={dayVisible}
+                weekVisible={weekVisible}
                 wordcountVisible={wordcountVisible}
-                setFicSelected={(selected) =>
-                  selected ? setSelectedFic(fic) : setSelectedFic(null)
+                isSelected={fic.fic_id === selectedFic?.fic_id}
+                toggleSelected={() =>
+                  fic.fic_id === selectedFic?.fic_id
+                    ? setSelectedFic(null)
+                    : setSelectedFic(fic)
                 }
               />
             ))}
             <FicAdd
+              eventId={event.event_id!}
               addFicCallback={async () => {
                 await mutateFics();
               }}
@@ -141,7 +159,11 @@ export default function GuessingBoard({ event }: GuessingBoardProps) {
           </div>
         )}
         {authorsVisible && (
-          <div>
+          <div
+            style={{
+              ...(bothVisible ? { width: '45%' } : {}),
+            }}
+          >
             <h3>Authors</h3>
             {/* <button onClick={fetchAuthorMetadata}>
               Get all author metadata
@@ -153,9 +175,13 @@ export default function GuessingBoard({ event }: GuessingBoardProps) {
                 setAuthorSelected={(selected) =>
                   selected ? setSelectedAuthor(author) : setSelectedAuthor(null)
                 }
+                dayVisible={dayVisible}
+                weekVisible={weekVisible}
+                wordcountVisible={wordcountVisible}
               />
             ))}
             <AuthorAdd
+              eventId={event.event_id!}
               addAuthorCallback={async () => {
                 await mutateAuthors();
               }}

@@ -1,30 +1,32 @@
 import { useState } from 'react';
-import TagBadge from './TagBadge';
-import HoverBlocker from '../_lib/HoverBlocker';
+import TagBadge from '../_components/TagBadge';
+import HoverBlocker from '../_components/HoverBlocker';
 
 interface FicDescriptionProps {
   fic: Fic;
   dayVisible: boolean;
+  weekVisible: boolean;
   wordcountVisible: boolean;
-  setFicSelected: (selected: boolean) => void;
+  isSelected: boolean;
+  toggleSelected: () => void;
 }
 
 export default function FicDescription({
   fic,
   dayVisible,
+  weekVisible,
   wordcountVisible,
-  setFicSelected,
+  isSelected,
+  toggleSelected,
 }: FicDescriptionProps) {
-  const [selected, setSelected] = useState(false);
   const [childHover, setChildHover] = useState(false);
 
   return (
     <div
-      className={`description ${selected ? 'selected' : ''} ${childHover ? 'childHover' : ''}`}
+      className={`description ${isSelected ? 'selected' : ''} ${childHover ? 'childHover' : ''}`}
       // TODO: there needs to be some kind of callback to set it as the one being selected for a match
       onClick={() => {
-        setFicSelected(!selected);
-        setSelected((prev) => !prev);
+        toggleSelected();
       }}
     >
       <div
@@ -34,7 +36,8 @@ export default function FicDescription({
           justifyContent: 'space-around',
         }}
       >
-        {dayVisible && <span>{fic.day ?? ''}</span>}
+        {weekVisible && <span>{`Week ${fic.week ?? ''}`}</span>}
+        {dayVisible && <span>{`Day ${fic.day ?? ''}`}</span>}
         <span>
           <a
             href={fic.link}
@@ -44,14 +47,13 @@ export default function FicDescription({
             {fic.title}
           </a>
         </span>
-        {/* TODO: format wc w/ commas */}
         {wordcountVisible && (
           <span>{(fic.wordcount ?? 0).toLocaleString()}</span>
         )}
       </div>
       {/* TODO: tag adding & removal */}
       <HoverBlocker setChildHover={setChildHover}>
-        <div style={{ display: 'flex', flexDirection: 'row', gap: '2px' }}>
+        <div className='tag-wrapper'>
           {fic.tags?.map((tag, i) => (
             <TagBadge key={i} tag={tag} />
           ))}

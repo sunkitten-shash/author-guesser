@@ -333,6 +333,13 @@ code {
   }
 }
 
+.badge {
+  background-color: #2e303a;
+  border-radius: 5px;
+  padding: 3px;
+  font-size: 0.85rem;
+}
+
 .tagBadge {
   background-color: #2e303a;
   border-radius: 5px;
@@ -348,6 +355,13 @@ code {
   border: 1px solid gray;
   border-radius: 5px;
   padding: 5px;
+}
+
+.tag-wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+  flex-wrap: wrap;
 }
 
 .description:hover:not(.childHover) {

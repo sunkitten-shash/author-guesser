@@ -30,17 +30,17 @@ export const addTag = async (tag: Tag): Promise<number> => {
   if (tag.tag_id) return tag.tag_id;
 
   const { db } = await getDB();
-  const newId = await db.one<number>(
+  const newTag = await db.one<Tag>(
     `INSERT INTO
     tag (name, category)
   VALUES ($1, $2)
-  ON CONFLICT DO UPATE
+  ON CONFLICT (name, category) DO UPDATE
     SET name=$1
-  RETURNING tag_id`,
+  RETURNING *`,
     [tag.name, tag.category ?? null],
   );
 
-  return newId;
+  return newTag.tag_id!;
 };
 
 export const linkTagToFic = async (tagId: number, ficId: number) => {
@@ -51,20 +51,67 @@ export const linkTagToFic = async (tagId: number, ficId: number) => {
   );
 };
 
+// TODO: transaction this baby
 export const addFic = async (fic: Fic) => {
   let tags = fic.tags ?? [];
   const tagIds = await Promise.all(tags.map((tag) => addTag(tag)));
   tags = tags.map((tag, i) => ({ ...tag, tag_id: tagIds[i] }));
 
   const { db } = await getDB();
-  const ficId = await db.one<number>(
+  const newFic = await db.one<Fic>(
     `INSERT INTO
-      fic (title, link, day, week, notes, wordcount)
-    VALUES ($1, $2, $3, $4, $5, $6)`,
-    [fic.title, fic.link, fic.day, fic.week, fic.notes, fic.wordcount],
+      fic (title, link, day, week, notes, wordcount, event)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING *`,
+    [
+      fic.title,
+      fic.link,
+      fic.day,
+      fic.week,
+      fic.notes,
+      fic.wordcount,
+      fic.event_id,
+    ],
   );
 
-  await Promise.all(tagIds.map((tagId) => linkTagToFic(tagId, ficId)));
+  await Promise.all(tagIds.map((tagId) => linkTagToFic(tagId, newFic.fic_id!)));
+};
+
+export const linkTagToAuthor = async (tagId: number, authorId: number) => {
+  const { db } = await getDB();
+  await db.none(
+    'INSERT INTO tag_author (tag_id, author_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
+    [tagId, authorId],
+  );
+};
+
+export const addAuthor = async (author: Author) => {
+  let tags = author.tags ?? [];
+  const tagIds = await Promise.all(tags.map((tag) => addTag(tag)));
+  tags = tags.map((tag, i) => ({ ...tag, tag_id: tagIds[i] }));
+
+  const { db } = await getDB();
+  const newAuthor = await db.one<Author>(
+    `INSERT INTO
+      author (name, link, twitter, notes, day, week, number, event)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING *`,
+    [
+      author.name,
+      author.link,
+      author.twitter,
+      author.notes,
+      author.day,
+      author.week,
+      author.number,
+      author.event_id,
+    ],
+  );
+  console.log({ newAuthor });
+
+  await Promise.all(
+    tagIds.map((tagId) => linkTagToAuthor(tagId, newAuthor.author_id!)),
+  );
 };
 
 export const updateShipMappings = async (
