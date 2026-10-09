@@ -161,6 +161,9 @@ export default function GuessingBoard({ event }: GuessingBoardProps) {
         {authorsVisible && (
           <div
             style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '5px',
               ...(bothVisible ? { width: '45%' } : {}),
             }}
           >

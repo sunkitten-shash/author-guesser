@@ -21,3 +21,6 @@ todos:
 - loading state (at least for while updating things)
 - hide categories of tags (e.g., rating, ship, etc.)
 - consider having like rating, ship, etc. put elsewhere? since it's somewhat different info?
+- double-click on fic/author to filter fics/authors to only that one (easier for clearer matching?)
+
+TODO: figure out styling/css variables for shadcn csss

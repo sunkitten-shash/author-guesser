@@ -13,7 +13,7 @@ export default function MainPage() {
   }, [selectedEvent]);
 
   return (
-    <div id='root'>
+    <div id='root' className='dark'>
       <div>
         <h1>Author Guessing Game</h1>
         <EventSelector event={selectedEvent} setEvent={setSelectedEvent} />
