@@ -1,6 +1,6 @@
 {
   "base": "base",
-  "componentsPath": "./src/components/ui",
+  "componentsPath": "./app/components/ui",
   "typescript": true,
   "cssModules": true,
   "iconLibrary": "lucide-react",

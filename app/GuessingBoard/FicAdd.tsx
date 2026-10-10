@@ -3,7 +3,6 @@ import { fetchWorkMetadata } from '../_lib/ao3Utils';
 import { getTagString, setAsNum } from '../_lib/utils';
 import { useShipMappings, useTags } from '../_lib/swrLoaders';
 import { addFic, addTag, updateShipMappings } from '../_lib/updaters';
-import Button from '@/src/components/ui/button';
 
 interface FicAddProps {
   eventId: string | number;
@@ -306,7 +305,6 @@ export default function FicAdd({ eventId, addFicCallback }: FicAddProps) {
                 >
                   Close
                 </button>
-                <Button variant='secondary'>test</Button>
                 <button
                   onClick={async () => {
                     if (fic && !!fic.link && !!fic.title) {

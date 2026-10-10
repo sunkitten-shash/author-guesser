@@ -10,8 +10,9 @@
     "lint:fix": "eslint --fix"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
+    "@base-ui/react": "^1.9.0",
     "cheerio": "^1.2.0",
+    "cmdk": "^1.1.1",
     "dotenv": "^18.0.5",
     "fetch-cookie": "^3.2.0",
     "fs": "^0.0.1-security",

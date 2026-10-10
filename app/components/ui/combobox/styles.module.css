@@ -1,0 +1,4 @@
+.combobox-primitive-positioner {
+  isolation: isolate;
+  z-index: 50;
+}
