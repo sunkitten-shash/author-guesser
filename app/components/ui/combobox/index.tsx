@@ -249,13 +249,22 @@ function ComboboxChip({
       {...props}
     >
       {children}
-      {showRemove && (
+      {/* {showRemove && (
         <ComboboxPrimitive.ChipRemove
           render={<Button variant='ghost' size='icon-sm' />}
           className={styles['combobox-chip-remove']}
           data-slot='combobox-chip-remove'
         >
           <XIcon className={styles.icon} />
+        </ComboboxPrimitive.ChipRemove>
+      )} */}
+      {showRemove && (
+        <ComboboxPrimitive.ChipRemove
+          render={<button />}
+          className={styles['combobox-chip-remove']}
+          data-slot='combobox-chip-remove'
+        >
+          <XIcon size='10px' />
         </ComboboxPrimitive.ChipRemove>
       )}
     </ComboboxPrimitive.Chip>

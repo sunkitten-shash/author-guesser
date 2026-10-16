@@ -1,7 +1,13 @@
-import { Dispatch, SetStateAction, useCallback, useState } from 'react';
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 import { useTags } from '../_lib/swrLoaders';
 import { addTag } from '../_lib/updaters';
-import { getTagString, setAsNum } from '../_lib/utils';
+import { getTagString, setAsNum, setAsNumArray } from '../_lib/utils';
 import TagSelectorOld from '../_components/TagSelectorOld';
 
 interface AuthorFormProps {
@@ -13,6 +19,12 @@ export default function AuthorForm({ author, setAuthor }: AuthorFormProps) {
   const [newTag, setNewTag] = useState('');
 
   const { tags, mutate: mutateTags } = useTags();
+
+  const daysString = useMemo(() => author.days?.join(',') ?? '', [author.days]);
+  const weeksString = useMemo(
+    () => author.weeks?.join(',') ?? '',
+    [author.weeks],
+  );
 
   const addTagToAuthor = useCallback(
     async (tag: Tag | string) => {
@@ -100,27 +112,27 @@ export default function AuthorForm({ author, setAuthor }: AuthorFormProps) {
             flexDirection: 'row',
           }}
         >
-          <label htmlFor='author-week'>Week</label>
+          <label htmlFor='author-week'>Weeks</label>
           <input
             id='author-week'
             type='text'
-            value={author.week ?? ''}
+            value={weeksString}
             onChange={(e) =>
               setAuthor((prev) => ({
                 ...prev,
-                week: setAsNum(e.target.value),
+                weeks: setAsNumArray(e.target.value),
               }))
             }
           />
-          <label htmlFor='author-day'>Day</label>
+          <label htmlFor='author-day'>Days</label>
           <input
             id='author-day'
             type='text'
-            value={author.day ?? ''}
+            value={daysString}
             onChange={(e) =>
               setAuthor((prev) => ({
                 ...prev,
-                day: setAsNum(e.target.value),
+                days: setAsNumArray(e.target.value),
               }))
             }
           />

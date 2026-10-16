@@ -45,9 +45,6 @@ export default function TagSelectorOld({
 
   const { tags, isLoading, mutate } = useTags();
 
-  const createInputRef = useRef<HTMLInputElement | null>(null);
-  const comboboxInputRef = useRef<HTMLInputElement | null>(null);
-
   const filteredTags = useMemo(
     () => tags.filter((tag) => !value.find((t) => tagsAreEqual(tag, t))),
     [tags, value],
@@ -73,8 +70,6 @@ export default function TagSelectorOld({
     }
     return searched;
   }, [filteredTags, search]);
-
-  useEffect(() => console.log(searchedTags));
 
   const { groups, tagDict } = useMemo(() => {
     const uniqueCategories = new Set(

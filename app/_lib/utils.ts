@@ -41,3 +41,28 @@ export const tagsAreEqual = (tag1: Tag, tag2: Tag) => {
 export const setAsNum = (value: string) => {
   return !!value && !isNaN(parseInt(value)) ? parseInt(value) : undefined;
 };
+
+export const setAsNumArray = (value: string) => {
+  let array = value.split(',').map((val) => setAsNum(val.trim()));
+  array = array.filter(Boolean);
+  return array as number[];
+};
+
+// return - for a first, + for b first, 0 for equal
+export const tagSort = (a: Tag, b: Tag) => {
+  // uncategorized tags get returned first
+  if (!a.category && !!b.category) return -1;
+  else if (!!a.category && !b.category) return 1;
+  else if (!a.category && !b.category) return a.name.localeCompare(b.name);
+
+  // TODO: category ordering?
+
+  if (a.category === b.category) {
+    if (a.name === 'mixed') return -1;
+    else if (b.name === 'mixed') return 1;
+
+    return a.name.localeCompare(b.name);
+  }
+
+  return getTagString(a).localeCompare(getTagString(b));
+};

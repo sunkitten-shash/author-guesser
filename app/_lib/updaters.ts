@@ -77,6 +77,39 @@ export const addFic = async (fic: Fic) => {
   await Promise.all(tagIds.map((tagId) => linkTagToFic(tagId, newFic.fic_id!)));
 };
 
+export const updateFic = async (fic: Fic) => {
+  let tags = fic.tags ?? [];
+  const tagIds = await Promise.all(tags.map((tag) => addTag(tag)));
+  tags = tags.map((tag, i) => ({ ...tag, tag_id: tagIds[i] }));
+
+  const { db } = await getDB();
+
+  const updatedFic = await db.one<Fic>(
+    `UPDATE fic SET
+      title = $1,
+      link = $2,
+      day = $3,
+      week = $4,
+      notes = $5,
+      wordcount = $6
+    WHERE fic_id = $7
+    RETURNING *`,
+    [
+      fic.title,
+      fic.link,
+      fic.day,
+      fic.week,
+      fic.notes,
+      fic.wordcount,
+      fic.fic_id,
+    ],
+  );
+
+  await Promise.all(
+    tagIds.map((tagId) => linkTagToFic(tagId, updatedFic.fic_id!)),
+  );
+};
+
 export const linkTagToAuthor = async (tagId: number, authorId: number) => {
   const { db } = await getDB();
   await db.none(
@@ -93,7 +126,7 @@ export const addAuthor = async (author: Author) => {
   const { db } = await getDB();
   const newAuthor = await db.one<Author>(
     `INSERT INTO
-      author (name, link, twitter, notes, day, week, wordcount, number, event)
+      author (name, link, twitter, notes, days, weeks, wordcount, number, event)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING *`,
     [
@@ -101,8 +134,8 @@ export const addAuthor = async (author: Author) => {
       author.link,
       author.twitter,
       author.notes,
-      author.day,
-      author.week,
+      author.days,
+      author.weeks,
       author.wordcount,
       author.number,
       author.event_id,
@@ -124,8 +157,8 @@ export const updateAuthor = async (author: Author) => {
       link = $2,
       twitter = $3,
       notes = $4,
-      day = $5,
-      week = $6,
+      days = $5,
+      weeks = $6,
       wordcount = $7,
       number = $8
     WHERE author_id = $9
@@ -135,8 +168,8 @@ export const updateAuthor = async (author: Author) => {
       author.link,
       author.twitter,
       author.notes,
-      author.day,
-      author.week,
+      author.days,
+      author.weeks,
       author.wordcount,
       author.number,
       author.author_id,

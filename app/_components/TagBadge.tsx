@@ -3,12 +3,17 @@ import { getTagString } from '../_lib/utils';
 
 interface TagBadgeProps {
   tag: Tag;
+  selected?: boolean;
   showDropdown?: boolean;
 }
 
-export default function TagBadge({ tag, showDropdown = false }: TagBadgeProps) {
+export default function TagBadge({
+  tag,
+  selected,
+  showDropdown = false,
+}: TagBadgeProps) {
   // TODO: is a callback needed for this?
-  const [selected, setSelected] = useState(false);
+  // const [selected, setSelected] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
@@ -19,7 +24,7 @@ export default function TagBadge({ tag, showDropdown = false }: TagBadgeProps) {
     <div>
       <span
         className={`badge ${selected ? 'selected' : ''}`}
-        onClick={() => setSelected((prev) => !prev)}
+        // onClick={() => setSelected((prev) => !prev)}
       >
         {getTagString(tag)}
       </span>

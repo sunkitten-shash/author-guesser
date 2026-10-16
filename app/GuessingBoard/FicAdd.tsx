@@ -2,16 +2,26 @@ import { useCallback, useEffect, useState } from 'react';
 import { fetchWorkMetadata } from '../_lib/ao3Utils';
 import { getTagString, setAsNum } from '../_lib/utils';
 import { useShipMappings, useTags } from '../_lib/swrLoaders';
-import { addFic, addTag, updateShipMappings } from '../_lib/updaters';
+import {
+  addFic,
+  addTag,
+  updateFic,
+  updateShipMappings,
+} from '../_lib/updaters';
 import TagSelector from '../_components/TagSelector';
 import TagSelectorOld from '../_components/TagSelectorOld';
 
 interface FicAddProps {
   eventId: string | number;
+  editingFic: Fic | null;
   addFicCallback: () => Promise<void>;
 }
 
-export default function FicAdd({ eventId, addFicCallback }: FicAddProps) {
+export default function FicAdd({
+  eventId,
+  editingFic,
+  addFicCallback,
+}: FicAddProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [fic, setFic] = useState<Fic>({ title: '', link: '' });
 
@@ -28,6 +38,13 @@ export default function FicAdd({ eventId, addFicCallback }: FicAddProps) {
       setLocalShipMappings(shipMappings);
     }
   }, [shipMappings, shipMappingsLoading]);
+
+  useEffect(() => {
+    if (editingFic) {
+      setFic(editingFic);
+      setDialogOpen(true);
+    }
+  }, [editingFic]);
 
   const addTagToFic = useCallback(
     async (tag: Tag | string) => {
@@ -133,16 +150,7 @@ export default function FicAdd({ eventId, addFicCallback }: FicAddProps) {
       <button onClick={() => setDialogOpen(true)}>+ Add Fic</button>
       {dialogOpen && (
         <div>
-          <dialog
-            open={dialogOpen}
-            style={{
-              position: 'absolute',
-              left: '25%',
-              right: '25%',
-              top: '15%',
-              width: '50%',
-            }}
-          >
+          <dialog className='dialog' open={dialogOpen}>
             <div
               style={{
                 display: 'flex',
@@ -338,7 +346,8 @@ export default function FicAdd({ eventId, addFicCallback }: FicAddProps) {
                     if (fic && !!fic.link && !!fic.title) {
                       await updateShipMappings(localShipMappings);
                       console.log({ fic });
-                      await addFic({ ...fic, event_id: eventId });
+                      if (fic.fic_id) await updateFic(fic);
+                      else await addFic({ ...fic, event_id: eventId });
                       await addFicCallback();
                       setFic({ title: '', link: '' });
                       setDialogOpen(false);

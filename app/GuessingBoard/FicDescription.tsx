@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import TagBadge from '../_components/TagBadge';
 import HoverBlocker from '../_components/HoverBlocker';
+import { EditIcon } from 'lucide-react';
 
 interface FicDescriptionProps {
   fic: Fic;
+  setFicEditing: () => void;
   dayVisible: boolean;
   weekVisible: boolean;
   wordcountVisible: boolean;
@@ -13,6 +15,7 @@ interface FicDescriptionProps {
 
 export default function FicDescription({
   fic,
+  setFicEditing,
   dayVisible,
   weekVisible,
   wordcountVisible,
@@ -29,6 +32,13 @@ export default function FicDescription({
         toggleSelected();
       }}
     >
+      <EditIcon
+        className='description-edit'
+        onClick={(e) => {
+          e.stopPropagation();
+          setFicEditing();
+        }}
+      />
       <div
         style={{
           display: 'flex',
@@ -52,32 +62,18 @@ export default function FicDescription({
         )}
       </div>
       {/* TODO: tag adding & removal */}
-      <HoverBlocker setChildHover={setChildHover}>
-        <div className='tag-wrapper'>
-          {fic.tags?.map((tag, i) => (
-            <TagBadge key={i} tag={tag} />
-          ))}
-        </div>
-      </HoverBlocker>
+      <div className='tag-wrapper'>
+        {fic.tags?.map((tag, i) => (
+          <TagBadge key={i} tag={tag} />
+        ))}
+      </div>
       {!!fic.notes && <p>{fic.notes}</p>}
       <HoverBlocker setChildHover={setChildHover}>
-        <details
-          style={{ width: 'fit-content' }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <summary>Matches</summary>
-          {fic.matches?.map((match, i) => (
-            <div key={i}>
-              {/* TODO: some kind of select? */}
-              {/* TODO: tag match badge element? */}
-              <span>{match.strength}</span>
-              <p>{match.notes}</p>
-            </div>
-          ))}
-          <button onClick={() => console.log('matching for', fic.title)}>
-            + Add match
-          </button>
-        </details>
+        <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+          <span>
+            <span>{`Matches: ${fic.matches?.length ?? 0}`}</span>
+          </span>
+        </div>
       </HoverBlocker>
     </div>
   );

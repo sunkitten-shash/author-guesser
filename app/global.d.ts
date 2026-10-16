@@ -39,8 +39,8 @@ interface Author {
   twitter?: string;
   notes?: string;
   tags?: Tag[];
-  day?: number;
-  week?: number;
+  days?: number[];
+  weeks?: number[];
   wordcount?: number;
   number?: number;
   matches?: FicMatch[];
@@ -81,6 +81,19 @@ interface EventRecord {
   name: string;
   link: string;
   archived?: boolean;
+}
+
+interface GeneralFilter {
+  week?: number | null;
+  day?: number | null;
+  fic?: Fic | null;
+  author?: Author | null;
+}
+
+interface GenericFilter {
+  tags?: Tag[];
+  operator?: 'OR' | 'AND';
+  unmatchedOnly?: boolean;
 }
 
 enum Confidence {
