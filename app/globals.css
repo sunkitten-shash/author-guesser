@@ -269,6 +269,13 @@ p {
   border: 1px solid gray;
   border-radius: 5px;
   padding: 5px;
+
+  position: relative;
+}
+
+.description-edit {
+  position: absolute;
+  right: 5px;
 }
 
 .tag-wrapper {
@@ -286,6 +293,14 @@ p {
 .selected {
   background-color: lightgreen;
   border-color: green;
+}
+
+.dialog {
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  top: 15%;
+  width: 50%;
 }
 
 /* @theme inline {

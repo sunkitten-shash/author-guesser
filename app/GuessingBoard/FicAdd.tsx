@@ -3,6 +3,8 @@ import { fetchWorkMetadata } from '../_lib/ao3Utils';
 import { getTagString, setAsNum } from '../_lib/utils';
 import { useShipMappings, useTags } from '../_lib/swrLoaders';
 import { addFic, addTag, updateShipMappings } from '../_lib/updaters';
+import TagSelector from '../_components/TagSelector';
+import TagSelectorOld from '../_components/TagSelectorOld';
 
 interface FicAddProps {
   eventId: string | number;
@@ -131,11 +133,21 @@ export default function FicAdd({ eventId, addFicCallback }: FicAddProps) {
       <button onClick={() => setDialogOpen(true)}>+ Add Fic</button>
       {dialogOpen && (
         <div>
-          <dialog open={dialogOpen}>
+          <dialog
+            open={dialogOpen}
+            style={{
+              position: 'absolute',
+              left: '25%',
+              right: '25%',
+              top: '15%',
+              width: '50%',
+            }}
+          >
             <div
               style={{
                 display: 'flex',
                 flexDirection: 'column',
+                padding: '5px',
               }}
             >
               {/* either put in title/wc info yourself or fetch it from ao3 */}
@@ -289,6 +301,22 @@ export default function FicAdd({ eventId, addFicCallback }: FicAddProps) {
                 ))}
               </select>
               {/* and a button to add new tags */}
+              <TagSelector
+                value={fic.tags ?? []}
+                setValue={(newTags) =>
+                  setFic((prev) => ({ ...prev, tags: newTags }))
+                }
+              />
+              <TagSelectorOld
+                value={fic.tags ?? []}
+                // setValue={() => console.log('set value')}
+                addTagCallback={(newTag) =>
+                  setFic((prev) => ({
+                    ...prev,
+                    tags: [...(prev.tags ?? []), newTag],
+                  }))
+                }
+              />
 
               <div
                 style={{

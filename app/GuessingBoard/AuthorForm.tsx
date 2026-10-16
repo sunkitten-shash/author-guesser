@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { useTags } from '../_lib/swrLoaders';
 import { addTag } from '../_lib/updaters';
 import { getTagString, setAsNum } from '../_lib/utils';
+import TagSelectorOld from '../_components/TagSelectorOld';
 
 interface AuthorFormProps {
   author: Author;
@@ -151,7 +152,16 @@ export default function AuthorForm({ author, setAuthor }: AuthorFormProps) {
 
         <h4>Tags</h4>
         <p>{author.tags?.map((tag) => getTagString(tag)).join(', ')}</p>
-        <select
+        <TagSelectorOld
+          value={author.tags ?? []}
+          addTagCallback={(newTag) =>
+            setAuthor((prev) => ({
+              ...prev,
+              tags: [...(prev.tags ?? []), newTag],
+            }))
+          }
+        />
+        {/* <select
           name='author-tag-select'
           id='author-tag-select'
           value=''
@@ -179,7 +189,7 @@ export default function AuthorForm({ author, setAuthor }: AuthorFormProps) {
           }}
         >
           + Add New Tag
-        </button>
+        </button> */}
       </div>
     </div>
   );

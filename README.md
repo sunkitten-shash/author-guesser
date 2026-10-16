@@ -22,5 +22,8 @@ todos:
 - hide categories of tags (e.g., rating, ship, etc.)
 - consider having like rating, ship, etc. put elsewhere? since it's somewhat different info?
 - double-click on fic/author to filter fics/authors to only that one (easier for clearer matching?)
+- matches should be more like Matches: [name] [name] [name] color-coded to strength, a sort of toggle buttons situation where you click on one and can see info
 
 TODO: figure out styling/css variables for shadcn csss
+
+https://base-ui.com/react/components/combobox YESSS this looks like. wayy easier to directly use lol I can just use their styles also if needed,

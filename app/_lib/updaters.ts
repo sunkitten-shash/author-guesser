@@ -93,8 +93,8 @@ export const addAuthor = async (author: Author) => {
   const { db } = await getDB();
   const newAuthor = await db.one<Author>(
     `INSERT INTO
-      author (name, link, twitter, notes, day, week, number, event)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      author (name, link, twitter, notes, day, week, wordcount, number, event)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING *`,
     [
       author.name,
@@ -103,6 +103,7 @@ export const addAuthor = async (author: Author) => {
       author.notes,
       author.day,
       author.week,
+      author.wordcount,
       author.number,
       author.event_id,
     ],
@@ -111,6 +112,45 @@ export const addAuthor = async (author: Author) => {
 
   await Promise.all(
     tagIds.map((tagId) => linkTagToAuthor(tagId, newAuthor.author_id!)),
+  );
+};
+
+export const updateAuthor = async (author: Author) => {
+  const { db } = await getDB();
+
+  const updatedAuthor = await db.one<Author>(
+    `UPDATE author SET
+      name = $1,
+      link = $2,
+      twitter = $3,
+      notes = $4,
+      day = $5,
+      week = $6,
+      wordcount = $7,
+      number = $8
+    WHERE author_id = $9
+    RETURNING *`,
+    [
+      author.name,
+      author.link,
+      author.twitter,
+      author.notes,
+      author.day,
+      author.week,
+      author.wordcount,
+      author.number,
+      author.author_id,
+    ],
+  );
+
+  console.log({ updatedAuthor });
+
+  let tags = author.tags ?? [];
+  const tagIds = await Promise.all(tags.map((tag) => addTag(tag)));
+  tags = tags.map((tag, i) => ({ ...tag, tag_id: tagIds[i] }));
+
+  await Promise.all(
+    tagIds.map((tagId) => linkTagToAuthor(tagId, updatedAuthor.author_id!)),
   );
 };
 

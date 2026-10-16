@@ -1,18 +1,27 @@
-import { useCallback, useState } from 'react';
-import { addAuthor } from '../_lib/updaters';
+import { useCallback, useEffect, useState } from 'react';
+import { addAuthor, updateAuthor } from '../_lib/updaters';
 import AuthorForm from './AuthorForm';
 
 interface AuthorAddProps {
   eventId: string | number;
-  addAuthorCallback: () => Promise<void>;
+  editingAuthor: Author | null;
+  submitCallback: () => Promise<void>;
 }
 
 export default function AuthorAdd({
   eventId,
-  addAuthorCallback,
+  editingAuthor,
+  submitCallback,
 }: AuthorAddProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [author, setAuthor] = useState<Author>({ name: '' });
+
+  useEffect(() => {
+    if (editingAuthor) {
+      setAuthor(editingAuthor);
+      setDialogOpen(true);
+    }
+  }, [editingAuthor]);
 
   const resetAuthor = useCallback(() => {
     setAuthor({ name: '' });
@@ -24,12 +33,7 @@ export default function AuthorAdd({
       <button onClick={() => setDialogOpen(true)}>+ Add Author</button>
       {dialogOpen && (
         <div>
-          <dialog
-            style={{
-              width: '100%',
-            }}
-            open={dialogOpen}
-          >
+          <dialog className='dialog' open={dialogOpen}>
             <AuthorForm author={author} setAuthor={setAuthor} />
 
             <div
@@ -52,8 +56,9 @@ export default function AuthorAdd({
                   // TODO: actually add author oops
                   if (!!author.name) {
                     console.log({ author });
-                    await addAuthor({ ...author, event_id: eventId });
-                    await addAuthorCallback();
+                    if (author.author_id) await updateAuthor(author);
+                    else await addAuthor({ ...author, event_id: eventId });
+                    await submitCallback();
                     resetAuthor();
                     setDialogOpen(false);
                   } else {

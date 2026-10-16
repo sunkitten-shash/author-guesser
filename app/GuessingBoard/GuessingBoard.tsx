@@ -40,6 +40,9 @@ export default function GuessingBoard({ event }: GuessingBoardProps) {
   const [selectedFic, setSelectedFic] = useState<Fic | null>(null);
   const [selectedAuthor, setSelectedAuthor] = useState<Author | null>(null);
 
+  const [editingFic, setEditingFic] = useState<Fic | null>(null);
+  const [editingAuthor, setEditingAuthor] = useState<Author | null>(null);
+
   useEffect(
     () => console.log({ fics, authors, matches }),
     [fics, authors, matches],
@@ -178,6 +181,7 @@ export default function GuessingBoard({ event }: GuessingBoardProps) {
                 setAuthorSelected={(selected) =>
                   selected ? setSelectedAuthor(author) : setSelectedAuthor(null)
                 }
+                setAuthorEditing={() => setEditingAuthor(author)}
                 dayVisible={dayVisible}
                 weekVisible={weekVisible}
                 wordcountVisible={wordcountVisible}
@@ -185,7 +189,8 @@ export default function GuessingBoard({ event }: GuessingBoardProps) {
             ))}
             <AuthorAdd
               eventId={event.event_id!}
-              addAuthorCallback={async () => {
+              editingAuthor={editingAuthor}
+              submitCallback={async () => {
                 await mutateAuthors();
               }}
             />

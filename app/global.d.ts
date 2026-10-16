@@ -43,6 +43,7 @@ interface Author {
   week?: number;
   wordcount?: number;
   number?: number;
+  matches?: FicMatch[];
 }
 
 interface TagMatch {
